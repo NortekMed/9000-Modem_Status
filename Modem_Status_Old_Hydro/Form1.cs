@@ -245,8 +245,8 @@ namespace Modem_Status_Old_Hydro
                 }
                 else { throw new Exception("Client " + this.Adress + " not Connected"); }
 
-
-                Console.WriteLine(this.Adress + " - Time_Rec=" + DateTime.UtcNow.ToString() + "; Lat=" + lat.ToString() + "; Lng=" + lng.ToString() + "; Tension=" + Voltage.ToString());
+                DateTime rec = DateTime.UtcNow;
+                Console.WriteLine(this.Adress + " - Time_Rec=" + rec.ToString() + "; Lat=" + lat.ToString() + "; Lng=" + lng.ToString() + "; Tension=" + Voltage.ToString());
 
                 //Register Tension to BDD
                 ////////////////////////////////////////////////////////////////////////////
@@ -266,7 +266,7 @@ namespace Modem_Status_Old_Hydro
 
                     insertTensionModemCommand.Transaction = databaseconnnection.BeginTransaction();
 
-                    insertTensionModemCommand.Parameters[j++].Value = DateTime.Now;
+                    insertTensionModemCommand.Parameters[j++].Value = rec;
                     insertTensionModemCommand.Parameters[j++].Value = Voltage;
 
                     try
@@ -297,7 +297,7 @@ namespace Modem_Status_Old_Hydro
                     insertGPS_ModemCommand.Transaction = databaseconnnection.BeginTransaction();
 
                     j = 0;
-                    insertGPS_ModemCommand.Parameters[j++].Value = DateTime.Now;
+                    insertGPS_ModemCommand.Parameters[j++].Value = rec;
                     insertGPS_ModemCommand.Parameters[j++].Value = lat;
                     insertGPS_ModemCommand.Parameters[j++].Value = lng;
                     insertGPS_ModemCommand.Parameters[j++].Value = -1;
