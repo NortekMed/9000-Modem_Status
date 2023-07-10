@@ -12,8 +12,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Renci.SshNet;
 using FirebirdSql.Data.FirebirdClient;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Modem_Status_Old_Hydro
 {
@@ -120,8 +118,26 @@ namespace Modem_Status_Old_Hydro
             // Lancement des Timers
             for (int i = 0; i< Modems_List.Count; i++)
             {
+                tabControl1.TabPages.Add(new TabPage(Modems_List[i].Adress.Substring(0, Modems_List[i].Adress.IndexOf('.'))));
+                TextBox textBox_hydro = new TextBox();
+                textBox_hydro.Name = Modems_List[i].Adress;
+                textBox_hydro.Multiline = true;
+                textBox_hydro.ReadOnly= true;
+                textBox_hydro.Size = new Size(775, 330);
+                textBox_hydro.BackColor = Color.Black;
+                textBox_hydro.ForeColor = Color.White;
+                textBox_hydro.ScrollBars = ScrollBars.Vertical;
+
+                Modems_List[i].console= textBox_hydro;
+
+                tabControl1.TabPages[tabControl1.TabPages.Count - 1].Controls.Add(Modems_List[i].console);
+
+
                 Console.WriteLine("Start TIMER : " + Modems_List[i].Adress + ":" + Modems_List[i].Port.ToString());
-                Modems_Timers.Add(new System.Threading.Timer(new System.Threading.TimerCallback(Modems_List[i].checkModem), this, i*15000, Modems_List[i].Period *60000));
+
+                Modems_List[i].appendTextConsole("Start TIMER : " + Modems_List[i].Adress + ":" + Modems_List[i].Port.ToString());
+
+                Modems_Timers.Add(new System.Threading.Timer(new System.Threading.TimerCallback(Modems_List[i].checkModem), this, 0, Modems_List[i].Period *60000));
                 //Modems_Timers.Add(new System.Threading.Timer(new System.Threading.TimerCallback(Modems_List[i].checkModem), this, 0, 5000));
             }
 
@@ -163,6 +179,11 @@ namespace Modem_Status_Old_Hydro
                 get { return Encoding.ASCII; }
             }
         }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+
+        }
     }
 
     public class SysHydro
@@ -171,7 +192,8 @@ namespace Modem_Status_Old_Hydro
         public int Port = 2332;
         public int Period = 30;
         public string DB_Path = "";
-        //static FbConnection databaseconnnection = null;
+
+        public TextBox console;
 
         public void checkModem(object e)
         {
@@ -248,6 +270,9 @@ namespace Modem_Status_Old_Hydro
                 DateTime rec = DateTime.UtcNow;
                 Console.WriteLine(this.Adress + " - Time_Rec=" + rec.ToString() + "; Lat=" + lat.ToString() + "; Lng=" + lng.ToString() + "; Tension=" + Voltage.ToString());
 
+                this.appendTextConsole(this.Adress + " - Time_Rec=" + rec.ToString() + "; Lat=" + lat.ToString() + "; Lng=" + lng.ToString() + "; Tension=" + Voltage.ToString());
+                this.appendTextConsole("");
+
                 //Register Tension to BDD
                 ////////////////////////////////////////////////////////////////////////////
                 int j = 0;
@@ -321,10 +346,21 @@ namespace Modem_Status_Old_Hydro
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error GetModemStatus " + this.Adress + " : " + ex.ToString());            
+                Console.WriteLine("\r\n --- " + this.Adress.ToUpper() + " --- " + ex.ToString() + "\r\n");
+                this.appendTextConsole("\r\n --- " + this.Adress.ToUpper() + " --- " + ex.ToString() + "\r\n");
             }
             
 
+        }
+
+        public void appendTextConsole(string text)
+        {
+            if (this.console.InvokeRequired)
+            {
+                this.console.Invoke(new Action<string>(appendTextConsole), new object[] { text });
+                return;
+            }
+            this.console.AppendText("\r\n" + text);
         }
 
         public static List<string> Extract_Data_From_Shell(string text)
